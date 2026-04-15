@@ -217,14 +217,26 @@ app.get('/total-revenue/:date', (req, res) => {
 app.post("/signup",(req,res)=>{
     let {names,email,password} = req.body;
     let hashedpassword = bcrypt.hashSync(password,10);
-db.query("insert into users (names, email, password) values(?,?,?)",[names,email,hashedpassword],(err,result)=>{
-    if(err){
-        console.error(err);
-        res.status(500).json({ error: 'Error signing up' });
-    }else{
-        res.json({message:"User registered successfully",result})
-    }
-})
+    db.query("select * from users where email=?", [email], (err, result) => {
+        if (err) {
+            console.error(err);
+            res.status(500).json({ error: 'Error checking if user exists' });
+        } else {
+            if (result.length > 0) {
+                res.json({ message: 'User already exists' });
+            } else {    
+
+                db.query("insert into users (names, email, password) values(?,?,?)",[names,email,hashedpassword],(err,result)=>{
+                    if(err){
+                        console.error(err);
+                        res.status(500).json({ error: 'Error signing up' });
+                    }else{
+                        res.json({message:"User registered successfully",result})
+                    }
+                })
+            }
+        }
+    })
 })
 // login
 app.post("/login",(req,res)=>{
